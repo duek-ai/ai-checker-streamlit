@@ -146,10 +146,7 @@ if uploaded_file:
                             st.markdown(f"<div class='rtl-text'><b>{label}</b></div>", unsafe_allow_html=True)
                             st.markdown(f"<div class='rtl-text'>{row[field]}</div>", unsafe_allow_html=True)
                             st.markdown("<br>", unsafe_allow_html=True)
-                    for field, label in optimization_fields:
-                        if row.get(field) and str(row[field]).strip():
-                            st.markdown(f"**{label}:**")
-                            st.markdown(f"<div class='rtl-text'>{row[field]}</div>", unsafe_allow_html=True)
+                    
 
     # הורדה
     output = io.BytesIO()
