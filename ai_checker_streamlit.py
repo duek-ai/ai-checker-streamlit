@@ -91,6 +91,7 @@ if uploaded_file:
 
     # כרטיסיות נפרדות לפי עמוד
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
+    st.subheader("🗂 ניתוח מפורט לפי עמוד")
     for _, row in filtered_df.iterrows():
         with st.expander(f"{row['Address']}"):
             st.markdown(
@@ -109,6 +110,21 @@ if uploaded_file:
             if row.get("E-E-A-T Checker") and str(row["E-E-A-T Checker"]).strip():
                 with st.expander("🧠 המלצות E-E-A-T"):
                     st.markdown(f"<div class='rtl-text'>{row['E-E-A-T Checker']}</div>", unsafe_allow_html=True)
+
+            if row.get("Entities Extraction") and str(row["Entities Extraction"]).strip():
+                with st.expander("🧩 ישויות מזוהות (Entities)"):
+                    st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
+                    for line in row["Entities Extraction"].split(","):
+                        st.markdown(f"- {line.strip()}")
+                    st.markdown("</div>", unsafe_allow_html=True)
+
+            if row.get("Intent Alignment") and str(row["Intent Alignment"]).strip():
+                with st.expander("🎯 ניתוח כוונת חיפוש"):
+                    st.markdown(f"<div class='rtl-text'>{row['Intent Alignment']}</div>", unsafe_allow_html=True)
+
+            if row.get("Content Gap vs Competitors") and str(row["Content Gap vs Competitors"]).strip():
+                with st.expander("📉 פערי תוכן מול מתחרים"):
+                    st.markdown(f"<div class='rtl-text'>{row['Content Gap vs Competitors']}</div>", unsafe_allow_html=True)
 
     # הורדה
     output = io.BytesIO()
