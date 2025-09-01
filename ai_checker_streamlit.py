@@ -75,20 +75,32 @@ if uploaded_file:
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
                 try:
-                    df_before = pd.read_csv(io.StringIO(row["Evaluation Table Before"]), sep='|', engine='python')
-                    df_before = df_before.dropna(axis=1, how='all')
-                    df_before.columns = [col.strip() for col in df_before.columns]
-                    st.dataframe(df_before.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
+                    if row["Evaluation Table Before"].strip().startswith("\begin"):
+                        st.latex(row["Evaluation Table Before"])
+                    else:
+                        df_before = pd.read_csv(io.StringIO(row["Evaluation Table Before"]), sep='|', engine='python')
+                        df_before = df_before.dropna(axis=1, how='all')
+                        df_before.columns = [col.strip() for col in df_before.columns]
+                        st.dataframe(df_before.style.set_table_styles(
+                            [{'selector': 'th', 'props': [('text-align', 'right')]},
+                             {'selector': 'td', 'props': [('text-align', 'right')]}]
+                        ), use_container_width=True)
                 except Exception:
                     st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before']}</div>", unsafe_allow_html=True)
 
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
                 try:
-                    df_after = pd.read_csv(io.StringIO(row["Evaluation Table After"]), sep='|', engine='python')
-                    df_after = df_after.dropna(axis=1, how='all')
-                    df_after.columns = [col.strip() for col in df_after.columns]
-                    st.dataframe(df_after.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
+                    if row["Evaluation Table After"].strip().startswith("\begin"):
+                        st.latex(row["Evaluation Table After"])
+                    else:
+                        df_after = pd.read_csv(io.StringIO(row["Evaluation Table After"]), sep='|', engine='python')
+                        df_after = df_after.dropna(axis=1, how='all')
+                        df_after.columns = [col.strip() for col in df_after.columns]
+                        st.dataframe(df_after.style.set_table_styles(
+                            [{'selector': 'th', 'props': [('text-align', 'right')]},
+                             {'selector': 'td', 'props': [('text-align', 'right')]}]
+                        ), use_container_width=True)
                 except Exception:
                     st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After']}</div>", unsafe_allow_html=True)
 
