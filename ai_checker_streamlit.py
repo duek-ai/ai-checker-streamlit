@@ -73,12 +73,14 @@ if uploaded_file:
             col1, col2 = st.columns(2)
 
             def display_table_or_fallback(text, position):
-                if text.strip().startswith("\begin"):
-                    st.latex(text)
-                elif "|" in text and text.count("|") >= 2:
+                cleaned_text = text.strip()
+                if cleaned_text.startswith("\begin") or cleaned_text.startswith("egin"):
+                    st.latex(cleaned_text)
+                elif "|" in cleaned_text and cleaned_text.count("|") >= 2:
                     try:
-                        df = pd.read_csv(io.StringIO(text), sep='|', engine='python')
+                        df = pd.read_csv(io.StringIO(cleaned_text), sep='|', engine='python', skiprows=[1])
                         df = df.dropna(axis=1, how='all')
+                        df = df.dropna(how='all')
                         df.columns = [col.strip() for col in df.columns]
                         st.dataframe(
                             df.style.set_table_styles([
@@ -88,20 +90,10 @@ if uploaded_file:
                             use_container_width=True
                         )
                     except Exception:
-                        st.markdown(f"<div class='rtl-text'>{text}</div>", unsafe_allow_html=True)
+                        st.warning("⚠️ לא ניתן להציג טבלה, הפורמט אינו תקני")
+                        st.markdown(f"<div class='rtl-text'>{cleaned_text}</div>", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"<div class='rtl-text'>{text}</div>", unsafe_allow_html=True)
+                    st.warning("⚠️ אין תוכן להצגה כטבלה")
+                    st.markdown(f"<div class='rtl-text'>{cleaned_text}</div>", unsafe_allow_html=True)
 
-            with col1:
-                st.markdown("**טבלת ניתוח לפני:**")
-                display_table_or_fallback(row["Evaluation Table Before"], "before")
-
-            with col2:
-                st.markdown("**טבלת ניתוח אחרי:**")
-                display_table_or_fallback(row["Evaluation Table After"], "after")
-
-    # הורדה
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        filtered_df.to_excel(writer, index=False, sheet_name='Evaluation')
-    st.download_button("📥 הורד את הקובץ כ-Excel", data=output.getvalue(), file_name="evaluation_report.xlsx")
+    # הורדה("📥 הורד את הקובץ כ-Excel", data=output.getvalue(), file_name="evaluation_report.xlsx")
