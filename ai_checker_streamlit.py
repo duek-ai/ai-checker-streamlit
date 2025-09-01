@@ -63,16 +63,23 @@ if uploaded_file:
     else:
         st.warning("לא נבחרו עמודות להצגה")
 
-    # טבלאות ניתוח לפי ואחרי (לכל עמוד)
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
     for i, row in filtered_df.iterrows():
-        with st.expander(f"🔗 {row['Address']}"):
-            st.markdown(f"**🟣 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
-
+        with st.expander(f"{row['Address']}"):
+            st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
-                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before'].replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
+                st.text_area("Evaluation Table Before", row["Evaluation Table Before"], height=220)
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After'].replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
+                st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
+
+            # שדות נוספים בתצוגה מלאה
+            for field in ["E-E-A-T Checker", "Entities Extraction", "Intent Alignment", "Content Gap vs Competitors", "Schema Suggestions", "H1 Rewriter", "Featured Snippet Optimizer", "CTA Optimizer", "Product Title Optimizer", "Product Description Optimizer"]:
+                if field in row and pd.notna(row[field]):
+                    with st.expander(f"{field} – תוכן השדה"):
+                        st.markdown(f"<div class='rtl-text'>{row[field]}</div>", unsafe_allow_html=True)
+
+    # הצגת טול־טיפ על שדה מחושב
+    st.markdown("<div class='rtl-text'><b>שים לב:</b> השדות Score Before ו־Score After מחושבים מתוך Evaluation Table באופן אוטומטי.</div>", unsafe_allow_html=True)
