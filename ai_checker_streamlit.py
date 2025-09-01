@@ -67,43 +67,30 @@ if uploaded_file:
 
     # כרטיסיות נפרדות לפי עמוד
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
-    for i, row in filtered_df.iterrows():
+    for _, row in filtered_df.iterrows():
         with st.expander(f"{row['Address']}"):
             st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
             col1, col2 = st.columns(2)
+
             with col1:
-            st.markdown("**טבלת ניתוח לפני:**")
-            try:
-                df_before = pd.read_csv(io.StringIO(row["Evaluation Table Before"]), sep='|', engine='python')
-                df_before = df_before.dropna(axis=1, how='all')
-                df_before.columns = [col.strip() for col in df_before.columns]
-                st.dataframe(df_before.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
-            except:
-                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before']}</div>", unsafe_allow_html=True)
-        with col2:
-            st.markdown("**טבלת ניתוח אחרי:**")
-            try:
-                df_after = pd.read_csv(io.StringIO(row["Evaluation Table After"]), sep='|', engine='python')
-                df_after = df_after.dropna(axis=1, how='all')
-                df_after.columns = [col.strip() for col in df_after.columns]
-                st.dataframe(df_after.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
-            except:
-                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After']}</div>", unsafe_allow_html=True)
-                    st.markdown("""
-                        <div class="rtl-text">
-                    """ + row["Evaluation Table Before"] + """
-                        </div>
-                    """, unsafe_allow_html=True)
+                st.markdown("**טבלת ניתוח לפני:**")
+                try:
+                    df_before = pd.read_csv(io.StringIO(row["Evaluation Table Before"]), sep='|', engine='python')
+                    df_before = df_before.dropna(axis=1, how='all')
+                    df_before.columns = [col.strip() for col in df_before.columns]
+                    st.dataframe(df_before.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
+                except Exception:
+                    st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before']}</div>", unsafe_allow_html=True)
+
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                if row["Evaluation Table After"].strip().startswith("\begin"):
-                    st.latex(row["Evaluation Table After"])
-                else:
-                    st.markdown("""
-                        <div class="rtl-text">
-                    """ + row["Evaluation Table After"] + """
-                        </div>
-                    """, unsafe_allow_html=True)
+                try:
+                    df_after = pd.read_csv(io.StringIO(row["Evaluation Table After"]), sep='|', engine='python')
+                    df_after = df_after.dropna(axis=1, how='all')
+                    df_after.columns = [col.strip() for col in df_after.columns]
+                    st.dataframe(df_after.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
+                except Exception:
+                    st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After']}</div>", unsafe_allow_html=True)
 
     # הורדה
     output = io.BytesIO()
