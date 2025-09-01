@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 
-# פונקציה להמרת טקסט Markdown לטבלה (DataFrame) עם טיפול בכפילויות
+# פונקציה להמרת טקסט Markdown לטבלה
 def markdown_to_df(text):
     lines = [line.strip() for line in text.split("\n") if "|" in line]
     if len(lines) < 2:
@@ -24,10 +24,11 @@ def markdown_to_df(text):
             data.append(parts)
     return pd.DataFrame(data, columns=unique_headers)
 
-# הגדרות עמוד + עיצוב
+# הגדרת עמוד
 st.set_page_config(layout="wide", page_title="AI Evaluation Viewer")
 st.markdown("<h1 class='rtl-text'>📊 דוח SEO מעילים – ציון וניתוח לפי 7 עקרונות</h1>", unsafe_allow_html=True)
 
+# CSS לעיצוב RTL ותגיות ציונים
 st.markdown("""
     <style>
     .rtl-text {
@@ -60,13 +61,13 @@ uploaded_file = st.file_uploader("העלה קובץ Excel מהסריקה", type=
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    # ניקוי ציונים
+    # ניקוי שדות ציונים
     df["Score Before"] = df["Score Before"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Score After"] = df["Score After"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Evaluation Table Before"] = df["Evaluation Table Before"].fillna("")
     df["Evaluation Table After"] = df["Evaluation Table After"].fillna("")
 
-    # פירוש ציונים
+    # הסבר הציון – מבוסס על Score Before בלבד
     def explain_score(score):
         if pd.isna(score):
             return "<span class='score-badge score-unknown'>❓</span>"
@@ -81,29 +82,29 @@ if uploaded_file:
         else:
             return "<span class='score-badge score-bad'>🔴 דורש שכתוב</span>"
 
-    df["Score Explanation"] = df["Score After"].apply(explain_score)
+    df["Score Explanation"] = df["Score Before"].apply(explain_score)
 
     # סינון צד
     st.sidebar.header("🌟 סינון")
     indexability_filter = st.sidebar.selectbox("Indexability", options=["הכל"] + df["Indexability"].dropna().unique().tolist())
-    weak_score = st.sidebar.checkbox("ציון After נמוך מ-6")
+    weak_score = st.sidebar.checkbox("ציון Before נמוך מ-6")
 
     filtered_df = df.copy()
     if indexability_filter != "הכל":
         filtered_df = filtered_df[filtered_df["Indexability"] == indexability_filter]
     if weak_score:
-        filtered_df = filtered_df[filtered_df["Score After"] < 6]
+        filtered_df = filtered_df[filtered_df["Score Before"] < 6]
 
-    # טבלת עמודים כללית
+    # טבלת עמודים
     st.markdown("<h3 class='rtl-text'>📄 בחר/י אילו עמודות להצגה בטבלת עמודים</h3>", unsafe_allow_html=True)
     selected_columns = st.multiselect(
         "בחר/י שדות להצגה:",
         options=df.columns.tolist(),
-        default=["Address", "Title 1", "Score Before", "Score After", "Score Explanation"]
+        default=["Address", "Title 1", "Score Before", "Score Explanation"]
     )
 
     if selected_columns:
-        st.markdown("<div class='rtl-text'>השדות <strong>Score After</strong> ו־<strong>Score Before</strong> מחושבים מתוך Evaluation Table.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='rtl-text'>השדה <strong>Score Explanation</strong> מחושב מתוך Score Before בלבד, כדי לזהות עמודים הדורשים טיפול.</div>", unsafe_allow_html=True)
         st.dataframe(filtered_df[selected_columns], use_container_width=True)
     else:
         st.warning("לא נבחרו עמודות להצגה")
@@ -137,14 +138,14 @@ if uploaded_file:
                 else:
                     st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
 
-            # שדות טקסט נוספים (כולל Featured Snippet)
+            # שדות ניתוח נוספים
             extra_fields = [
                 ("🧠 המלצות E-E-A-T", "E-E-A-T Checker"),
                 ("🧩 ישויות מזוהות (Entities)", "Entities Extraction"),
                 ("🎯 ניתוח כוונת חיפוש", "Intent Alignment"),
                 ("📉 פערי תוכן מול מתחרים", "Content Gap vs Competitors"),
                 ("🧩 הצעות סכמות (Schema)", "Schema Suggestions"),
-                ("🛠 המלצות יישום ישיר (Rewriters & Optimizers)", "Rewriters & Optimizers"),
+                ("🛠 המלצות יישום ישיר (Rewriters & Optimizers)","Rewriters & Optimizers"),
                 ("🏆 Featured Snippet Optimizer", "Featured Snippet Optimizer")
             ]
             for label, field in extra_fields:
