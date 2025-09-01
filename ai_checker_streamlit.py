@@ -2,15 +2,12 @@ import streamlit as st
 import pandas as pd
 import io
 
-# 🧠 פונקציה להמרת טקסט markdown לטבלת pandas עם טיפול בכפילויות
+# פונקציה להמרת טקסט Markdown לטבלה עם טיפול בכפילויות בעמודות
 def markdown_to_df(text):
     lines = [line.strip() for line in text.split("\n") if "|" in line]
     if len(lines) < 2:
-        return None  # אין מספיק שורות תקינות
-
+        return None
     headers = [h.strip() for h in lines[0].split("|")]
-    
-    # טיפול בכפילויות בשמות עמודות
     seen = {}
     unique_headers = []
     for h in headers:
@@ -20,26 +17,24 @@ def markdown_to_df(text):
         else:
             seen[h] = 1
             unique_headers.append(h)
-
     data = []
-    for line in lines[2:]:  # מדלג על שורת הכותרת ושורת ה ---
+    for line in lines[2:]:
         parts = [cell.strip() for cell in line.split("|")]
         if len(parts) == len(unique_headers):
             data.append(parts)
-
     return pd.DataFrame(data, columns=unique_headers)
 
-# ⚙️ הגדרות עמוד
+# הגדרות עמוד ועיצוב
 st.set_page_config(layout="wide", page_title="AI Evaluation Viewer")
-st.title("📊 דוח SEO מעילים – ציון וניתוח לפי 7 עקרונות")
+st.markdown("<h1 class='rtl-text'>📊 דוח SEO מעילים – ציון וניתוח לפי 7 עקרונות</h1>", unsafe_allow_html=True)
 
-# 🎨 CSS לעיצוב RTL ותגיות צבעוניות
+# CSS לעיצוב ימין-לשמאל ותגיות ציונים
 st.markdown("""
     <style>
     .rtl-text {
         direction: rtl;
         text-align: right;
-        font-family: Arial;
+        font-family: Arial, sans-serif;
     }
     .score-badge {
         border-radius: 8px;
@@ -48,26 +43,25 @@ st.markdown("""
         color: white;
         display: inline-block;
     }
-    .score-good { background-color: #4CAF50; }     /* ירוק */
-    .score-mid { background-color: #FFC107; }      /* כתום */
-    .score-bad { background-color: #F44336; }      /* אדום */
-    .score-unknown { background-color: #9E9E9E; }  /* אפור */
+    .score-good { background-color: #4CAF50; }
+    .score-mid { background-color: #FFC107; }
+    .score-bad { background-color: #F44336; }
+    .score-unknown { background-color: #9E9E9E; }
     </style>
 """, unsafe_allow_html=True)
 
-# 📥 העלאת קובץ Excel
+# העלאת קובץ
 uploaded_file = st.file_uploader("העלה קובץ Excel מהסריקה", type=["xlsx"])
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    # ניקוי וטיוב
+    # ניקוי עמודות ציונים
     df["Score Before"] = df["Score Before"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Score After"] = df["Score After"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Evaluation Table Before"] = df["Evaluation Table Before"].fillna("")
     df["Evaluation Table After"] = df["Evaluation Table After"].fillna("")
 
-    # 🧮 פונקציית דירוג ציונים
     def explain_score(score):
         if pd.isna(score):
             return "<span class='score-badge score-unknown'>❓</span>"
@@ -84,7 +78,7 @@ if uploaded_file:
 
     df["Score Explanation"] = df["Score After"].apply(explain_score)
 
-    # 🔍 סינון
+    # סינון
     st.sidebar.header("🌟 סינון")
     indexability_filter = st.sidebar.selectbox("Indexability", options=["הכל"] + df["Indexability"].dropna().unique().tolist())
     weak_score = st.sidebar.checkbox("ציון After נמוך מ-6")
@@ -95,8 +89,8 @@ if uploaded_file:
     if weak_score:
         filtered_df = filtered_df[filtered_df["Score After"] < 6]
 
-    # ✅ טבלה כללית
-    st.subheader("📄 בחר/י אילו עמודות להצגה בטבלת עמודים")
+    # טבלת שדות כללית
+    st.markdown("<h3 class='rtl-text'>📄 בחר/י אילו עמודות להצגה בטבלת עמודים</h3>", unsafe_allow_html=True)
     selected_columns = st.multiselect(
         "בחר/י שדות להצגה:",
         options=df.columns.tolist(),
@@ -104,24 +98,23 @@ if uploaded_file:
     )
 
     if selected_columns:
-        st.markdown("<div class='rtl-text'>השדות <strong>Score After</strong> ו־<strong>Score Before</strong> מחושבים מתוך Evaluation Table באופן אוטומטי.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='rtl-text'>השדות <strong>Score After</strong> ו־<strong>Score Before</strong> מחושבים מתוך Evaluation Table.</div>", unsafe_allow_html=True)
         st.dataframe(filtered_df[selected_columns], use_container_width=True)
     else:
         st.warning("לא נבחרו עמודות להצגה")
 
-    # 🧩 ניתוח מפורט לפי עמוד
-    st.subheader("🗂 ניתוח מפורט לפי עמוד")
+    # תצוגת ניתוח פרטני
+    st.markdown("<h3 class='rtl-text'>🗂 ניתוח מפורט לפי עמוד</h3>", unsafe_allow_html=True)
     for i, row in filtered_df.iterrows():
         with st.expander(f"🔗 {row['Address']}"):
             st.markdown(
-                f"**🔢 ציון לפני:** {row['Score Before']} • **אחרי:** {row['Score After']} • **פירוש:** {row['Score Explanation']}",
+                f"<div class='rtl-text'><strong>🔢 ציון לפני:</strong> {row['Score Before']} • <strong>אחרי:</strong> {row['Score After']} • <strong>פירוש:</strong> {row['Score Explanation']}</div>",
                 unsafe_allow_html=True
             )
 
             col1, col2 = st.columns(2)
-
             with col1:
-                st.markdown("**טבלת ניתוח לפני:**")
+                st.markdown("<div class='rtl-text'><strong>טבלת ניתוח לפני:</strong></div>", unsafe_allow_html=True)
                 df_before = markdown_to_df(row["Evaluation Table Before"])
                 if df_before is not None:
                     st.table(df_before)
@@ -129,21 +122,22 @@ if uploaded_file:
                     st.text_area("Evaluation Table Before", row["Evaluation Table Before"], height=220)
 
             with col2:
-                st.markdown("**טבלת ניתוח אחרי:**")
+                st.markdown("<div class='rtl-text'><strong>טבלת ניתוח אחרי:</strong></div>", unsafe_allow_html=True)
                 df_after = markdown_to_df(row["Evaluation Table After"])
                 if df_after is not None:
                     st.table(df_after)
                 else:
                     st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
 
-            # שדות נוספים להרחבה
+            # שדות נוספים
             extra_fields = [
                 ("🧠 המלצות E-E-A-T", "E-E-A-T Checker"),
                 ("🧩 ישויות מזוהות (Entities)", "Entities Extraction"),
                 ("🎯 ניתוח כוונת חיפוש", "Intent Alignment"),
                 ("📉 פערי תוכן מול מתחרים", "Content Gap vs Competitors"),
                 ("🧩 הצעות סכמות (Schema)", "Schema Suggestions"),
-                ("🛠 המלצות יישום ישיר (Rewriters & Optimizers)", "Rewriters & Optimizers")
+                ("🛠 המלצות יישום ישיר (Rewriters & Optimizers)", "Rewriters & Optimizers"),
+                ("🏆 Featured Snippet Optimizer", "Featured Snippet Optimizer")  # ✨ חדש
             ]
             for label, field in extra_fields:
                 if field in df.columns:
