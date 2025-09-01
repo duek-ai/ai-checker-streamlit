@@ -3,7 +3,6 @@ import pandas as pd
 import io
 
 st.set_page_config(layout="wide", page_title="AI Evaluation Viewer")
-st.title("📊 דוח SEO מעילים – ציון וניתוח לפי 7 עקרונות")
 
 st.markdown("""
     <style>
@@ -12,8 +11,15 @@ st.markdown("""
         text-align: right;
         font-family: Arial;
     }
+    .streamlit-expanderHeader {
+        direction: rtl;
+        text-align: right;
+        font-weight: bold;
+    }
     </style>
 """, unsafe_allow_html=True)
+
+st.title("📊 דוח SEO מעילים – ציון וניתוח לפי 7 עקרונות")
 
 uploaded_file = st.file_uploader("העלה קובץ Excel מהסריקה", type=["xlsx"])
 
