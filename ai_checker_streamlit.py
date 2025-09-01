@@ -63,29 +63,16 @@ if uploaded_file:
     else:
         st.warning("לא נבחרו עמודות להצגה")
 
-    # הצגת טבלאות ניתוח מפורטות אם קיימות
+    # טבלאות ניתוח לפי ואחרי (לכל עמוד)
+    st.subheader("🗂 ניתוח מפורט לפי עמוד")
     for i, row in filtered_df.iterrows():
         with st.expander(f"🔗 {row['Address']}"):
-            st.markdown(f"**🧮 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
+            st.markdown(f"**🟣 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
 
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
-                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before'].replace('\n', '<br>')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before'].replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After'].replace('\n', '<br>')}</div>", unsafe_allow_html=True)
-
-            expander_fields = [
-                ("E-E-A-T המלצות", "E-E-A-T Recommendation"),
-                ("🧩 ישויות מזוהות (Entities)", "Entities Extraction"),
-                ("🎯 ניתוח כוונת חיפוש", "Intent Alignment"),
-                ("📉 פערי תוכן מול מתחרים", "Content Gap vs Competitors"),
-                ("🧩 הצעות סכמות (Schema)", "Schema Suggestions"),
-                ("🛠 המלצות יישום ישיר (Rewriters & Optimizers)", "Rewriters & Optimizers")
-            ]
-
-            for title, col in expander_fields:
-                if col in row and pd.notna(row[col]) and str(row[col]).strip():
-                    with st.expander(title):
-                        st.markdown(f"<div class='rtl-text'>{str(row[col]).replace('\n', '<br>')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After'].replace(chr(10), '<br>')}</div>", unsafe_allow_html=True)
