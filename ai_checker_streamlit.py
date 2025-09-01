@@ -72,37 +72,33 @@ if uploaded_file:
             st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
             col1, col2 = st.columns(2)
 
+            def display_table_or_fallback(text, position):
+                if text.strip().startswith("\begin"):
+                    st.latex(text)
+                elif "|" in text and text.count("|") >= 2:
+                    try:
+                        df = pd.read_csv(io.StringIO(text), sep='|', engine='python')
+                        df = df.dropna(axis=1, how='all')
+                        df.columns = [col.strip() for col in df.columns]
+                        st.dataframe(
+                            df.style.set_table_styles([
+                                {'selector': 'th', 'props': [('text-align', 'right')]},
+                                {'selector': 'td', 'props': [('text-align', 'right')]}
+                            ]),
+                            use_container_width=True
+                        )
+                    except Exception:
+                        st.markdown(f"<div class='rtl-text'>{text}</div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div class='rtl-text'>{text}</div>", unsafe_allow_html=True)
+
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
-                try:
-                    if row["Evaluation Table Before"].strip().startswith("\begin"):
-                        st.latex(row["Evaluation Table Before"])
-                    else:
-                        df_before = pd.read_csv(io.StringIO(row["Evaluation Table Before"]), sep='|', engine='python')
-                        df_before = df_before.dropna(axis=1, how='all')
-                        df_before.columns = [col.strip() for col in df_before.columns]
-                        st.dataframe(df_before.style.set_table_styles(
-                            [{'selector': 'th', 'props': [('text-align', 'right')]},
-                             {'selector': 'td', 'props': [('text-align', 'right')]}]
-                        ), use_container_width=True)
-                except Exception:
-                    st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before']}</div>", unsafe_allow_html=True)
+                display_table_or_fallback(row["Evaluation Table Before"], "before")
 
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                try:
-                    if row["Evaluation Table After"].strip().startswith("\begin"):
-                        st.latex(row["Evaluation Table After"])
-                    else:
-                        df_after = pd.read_csv(io.StringIO(row["Evaluation Table After"]), sep='|', engine='python')
-                        df_after = df_after.dropna(axis=1, how='all')
-                        df_after.columns = [col.strip() for col in df_after.columns]
-                        st.dataframe(df_after.style.set_table_styles(
-                            [{'selector': 'th', 'props': [('text-align', 'right')]},
-                             {'selector': 'td', 'props': [('text-align', 'right')]}]
-                        ), use_container_width=True)
-                except Exception:
-                    st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After']}</div>", unsafe_allow_html=True)
+                display_table_or_fallback(row["Evaluation Table After"], "after")
 
     # הורדה
     output = io.BytesIO()
