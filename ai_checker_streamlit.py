@@ -91,8 +91,9 @@ if uploaded_file:
 
     # כרטיסיות נפרדות לפי עמוד
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
+    st.subheader("🗂 ניתוח מפורט לפי עמוד")
     for _, row in filtered_df.iterrows():
-        with st.expander(f"{row['Address']}"):
+                with st.expander(f"{row['Address']}"):
             st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
             col1, col2 = st.columns(2)
 
@@ -101,8 +102,12 @@ if uploaded_file:
                 display_table_or_fallback(row["Evaluation Table Before"])
 
             with col2:
-                st.markdown("**טבלת ניתוח אחרי:**")
-                display_table_or_fallback(row["Evaluation Table After"])
+            st.markdown("**טבלת ניתוח אחרי:**")
+            display_table_or_fallback(row["Evaluation Table After"])
+
+        if row.get("E-E-A-T Checker") and str(row["E-E-A-T Checker"]).strip():
+            with st.expander("🧠 המלצות E-E-A-T"):
+                st.markdown(f"<div class='rtl-text'>{row['E-E-A-T Checker']}</div>", unsafe_allow_html=True)
 
     # הורדה
     output = io.BytesIO()
