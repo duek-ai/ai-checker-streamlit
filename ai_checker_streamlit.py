@@ -74,3 +74,27 @@ if uploaded_file:
         st.dataframe(filtered_df[selected_columns], use_container_width=True)
     else:
         st.warning("לא נבחרו עמודות להצגה")
+
+    st.subheader("🗂 ניתוח מפורט לפי עמוד")
+    for i, row in filtered_df.iterrows():
+        with st.expander(f"{row['Address']}"):
+            st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:**", unsafe_allow_html=True)
+            st.markdown(row['Score Explanation'], unsafe_allow_html=True)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**טבלת ניתוח לפני:**")
+                st.text_area("Evaluation Table Before", row["Evaluation Table Before"], height=220)
+            with col2:
+                st.markdown("**טבלת ניתוח אחרי:**")
+                st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
+
+            for field in [
+                "E-E-A-T Checker", "Entities Extraction", "Intent Alignment",
+                "Content Gap vs Competitors", "Schema Suggestions",
+                "H1 Rewriter", "Featured Snippet Optimizer", "CTA Optimizer",
+                "Product Title Optimizer", "Product Description Optimizer"
+            ]:
+                if field in row and pd.notna(row[field]):
+                    with st.expander(f"{field} – תוכן השדה"):
+                        st.markdown(f"<div class='rtl-text'>{row[field]}</div>", unsafe_allow_html=True)
