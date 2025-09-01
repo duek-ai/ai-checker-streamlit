@@ -12,6 +12,17 @@ st.markdown("""
         text-align: right;
         font-family: Arial;
     }
+    .score-badge {
+        border-radius: 8px;
+        padding: 4px 8px;
+        font-weight: bold;
+        color: white;
+        display: inline-block;
+    }
+    .score-good { background-color: #4CAF50; }     /* ירוק */
+    .score-mid { background-color: #FFC107; }     /* כתום */
+    .score-bad { background-color: #F44336; }     /* אדום */
+    .score-unknown { background-color: #9E9E9E; } /* אפור */
     </style>
 """, unsafe_allow_html=True)
 
@@ -27,17 +38,17 @@ if uploaded_file:
 
     def explain_score(score):
         if pd.isna(score):
-            return "❓"
+            return "<span class='score-badge score-unknown'>❓</span>"
         elif score >= 6.5:
-            return "✅ מושלם"
+            return "<span class='score-badge score-good'>✅ מושלם</span>"
         elif score >= 5.5:
-            return "🟢 טוב מאוד"
+            return "<span class='score-badge score-good'>🟢 טוב מאוד</span>"
         elif score >= 4.5:
-            return "🟡 בינוני"
+            return "<span class='score-badge score-mid'>🟡 בינוני</span>"
         elif score >= 3.5:
-            return "🟠 גבולי"
+            return "<span class='score-badge score-mid'>🟠 גבולי</span>"
         else:
-            return "🔴 דורש שכתוב"
+            return "<span class='score-badge score-bad'>🔴 דורש שכתוב</span>"
 
     df["Score Explanation"] = df["Score After"].apply(explain_score)
 
@@ -59,27 +70,7 @@ if uploaded_file:
     )
 
     if selected_columns:
+        st.markdown("<div class='rtl-text'>השדות <strong>Score After</strong> ו־<strong>Score Before</strong> מחושבים מתוך Evaluation Table באופן אוטומטי.</div>", unsafe_allow_html=True)
         st.dataframe(filtered_df[selected_columns], use_container_width=True)
     else:
         st.warning("לא נבחרו עמודות להצגה")
-
-    st.subheader("🗂 ניתוח מפורט לפי עמוד")
-    for i, row in filtered_df.iterrows():
-        with st.expander(f"{row['Address']}"):
-            st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("**טבלת ניתוח לפני:**")
-                st.text_area("Evaluation Table Before", row["Evaluation Table Before"], height=220)
-            with col2:
-                st.markdown("**טבלת ניתוח אחרי:**")
-                st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
-
-            # שדות נוספים בתצוגה מלאה
-            for field in ["E-E-A-T Checker", "Entities Extraction", "Intent Alignment", "Content Gap vs Competitors", "Schema Suggestions", "H1 Rewriter", "Featured Snippet Optimizer", "CTA Optimizer", "Product Title Optimizer", "Product Description Optimizer"]:
-                if field in row and pd.notna(row[field]):
-                    with st.expander(f"{field} – תוכן השדה"):
-                        st.markdown(f"<div class='rtl-text'>{row[field]}</div>", unsafe_allow_html=True)
-
-    # הצגת טול־טיפ על שדה מחושב
-    st.markdown("<div class='rtl-text'><b>שים לב:</b> השדות Score Before ו־Score After מחושבים מתוך Evaluation Table באופן אוטומטי.</div>", unsafe_allow_html=True)
