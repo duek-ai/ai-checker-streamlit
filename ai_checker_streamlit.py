@@ -63,13 +63,13 @@ if uploaded_file:
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
-                for line in row["Evaluation Table Before"].split("
+                for line in str(row["Evaluation Table Before"]).split("
 "):
                     if line.strip():
                         st.markdown(f"- {line.strip()}")
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                for line in row["Evaluation Table After"].split("
+                for line in str(row["Evaluation Table After"]).split("
 "):
                     if line.strip():
                         st.markdown(f"- {line.strip()}")
