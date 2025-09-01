@@ -114,7 +114,7 @@ if uploaded_file:
             if row.get("Entities Extraction") and str(row["Entities Extraction"]).strip():
                 with st.expander("🧩 ישויות מזוהות (Entities)"):
                     st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
-                    for line in row["Entities Extraction"].split(","):
+                    for line in str(row["Entities Extraction"]).split(","):
                         st.markdown(f"- {line.strip()}")
                     st.markdown("</div>", unsafe_allow_html=True)
 
