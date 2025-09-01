@@ -126,6 +126,10 @@ if uploaded_file:
                 with st.expander("📉 פערי תוכן מול מתחרים"):
                     st.markdown(f"<div class='rtl-text'>{row['Content Gap vs Competitors']}</div>", unsafe_allow_html=True)
 
+            if row.get("Schema Suggestions") and str(row["Schema Suggestions"]).strip():
+                with st.expander("🧩 הצעות סכמות (Schema)"):
+                    st.markdown(f"<div class='rtl-text'>{row['Schema Suggestions']}</div>", unsafe_allow_html=True)
+
     # הורדה
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
