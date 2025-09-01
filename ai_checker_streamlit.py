@@ -63,10 +63,16 @@ if uploaded_file:
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
-                st.code(row["Evaluation Table Before"], language="markdown")
+                for line in row["Evaluation Table Before"].split("
+"):
+                    if line.strip():
+                        st.markdown(f"- {line.strip()}")
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                st.code(row["Evaluation Table After"], language="markdown")
+                for line in row["Evaluation Table After"].split("
+"):
+                    if line.strip():
+                        st.markdown(f"- {line.strip()}")
 
     # הורדה
     output = io.BytesIO()
