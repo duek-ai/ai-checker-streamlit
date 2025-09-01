@@ -130,6 +130,22 @@ if uploaded_file:
                 with st.expander("🧩 הצעות סכמות (Schema)"):
                     st.markdown(f"<div class='rtl-text'>{row['Schema Suggestions']}</div>", unsafe_allow_html=True)
 
+            optimization_fields = [
+                ("H1 Rewriter", "🔠 כותרת H1 מומלצת"),
+                ("Featured Snippet Optimizer", "⭐ Featured Snippet מוצע"),
+                ("CTA Optimizer", "🎯 קריאה לפעולה (CTA) מומלצת"),
+                ("Product Title Optimizer", "🏷️ כותרת מוצר מומלצת"),
+                ("Product Description Optimizer", "📝 תיאור מוצר מומלץ")
+            ]
+
+            has_optimizations = any(row.get(field) and str(row[field]).strip() for field, _ in optimization_fields)
+            if has_optimizations:
+                with st.expander("🛠 המלצות יישום ישיר (Rewriters & Optimizers)"):
+                    for field, label in optimization_fields:
+                        if row.get(field) and str(row[field]).strip():
+                            st.markdown(f"**{label}:**")
+                            st.markdown(f"<div class='rtl-text'>{row[field]}</div>", unsafe_allow_html=True)
+
     # הורדה
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
