@@ -10,9 +10,8 @@ uploaded_file = st.file_uploader("העלה קובץ Excel מהסריקה", type=
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    # הגדרת שדות לפי הקובץ החדש
-    df["Score Before"] = pd.to_numeric(df["Score Before"], errors="coerce")
-    df["Score After"] = pd.to_numeric(df["Score After"], errors="coerce")
+    df["Score Before"] = df["Score Before"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
+    df["Score After"] = df["Score After"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Evaluation Table Before"] = df["Evaluation Table Before"].fillna("")
     df["Evaluation Table After"] = df["Evaluation Table After"].fillna("")
 
@@ -43,11 +42,20 @@ if uploaded_file:
     if weak_score:
         filtered_df = filtered_df[filtered_df["Score After"] < 6]
 
-    # טבלה מרכזית
-    st.subheader("📄 טבלת עמודים עם ציונים")
+    # טבלה מורחבת
+    st.subheader("📄 טבלת עמודים עם פרטים")
     st.dataframe(filtered_df[[
         "Address",
         "Title 1",
+        "H1-1",
+        "H2-1",
+        "Meta Description 1",
+        "Canonical Link Element 1",
+        "Redirect URL",
+        "Status Code",
+        "Indexability",
+        "Word Count",
+        "Text Ratio",
         "Score Before",
         "Score After",
         "Score Explanation"
@@ -61,10 +69,10 @@ if uploaded_file:
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
-                st.text_area("Evaluation Table Before", row["Evaluation Table Before"], height=220)
+                st.code(row["Evaluation Table Before"], language="markdown")
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
+                st.code(row["Evaluation Table After"], language="markdown")
 
     # הורדה
     output = io.BytesIO()
