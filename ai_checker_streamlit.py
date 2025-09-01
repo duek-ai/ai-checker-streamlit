@@ -10,6 +10,24 @@ uploaded_file = st.file_uploader("העלה קובץ Excel מתבנית סריק�
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
+    def evaluate_score_text(score):
+        if pd.isna(score):
+            return "❓ חסר ציון"
+        try:
+            numeric = int(str(score).split("/")[0])
+            if numeric == 7:
+                return "✅ מושלם – אין צורך בשיפור"
+            elif numeric == 6:
+                return "🟢 טוב מאוד – תיקון קל"
+            elif numeric == 5:
+                return "🟡 בינוני – כדאי לשפר"
+            elif numeric == 4:
+                return "🟠 גבולי – נדרש שכתוב"
+            elif numeric <= 3:
+                return "🔴 חלש – דרוש שכתוב מלא"
+        except:
+            return "❓ לא זוהה"
+
     # יצירת טור פעולות מומלצות
     def generate_action(row):
         actions = []
@@ -29,16 +47,17 @@ if uploaded_file:
 
     def suggest_text_improvement(row):
         suggestions = []
-        if row.get("7-Point Evaluation – After") and isinstance(row.get("7-Point Evaluation – After"), str):
-            score = row["7-Point Evaluation – After"]
-            if "6/7" in score or "5/7" in score:
+        score = row.get("7-Point Evaluation – After")
+        if score and isinstance(score, str):
+            if any(s in score for s in ["6/7", "5/7"]):
                 suggestions.append("שפר ניסוח לפי 7 העקרונות: כוונת חיפוש, עוגנים, הקשר נרטיבי")
-            if "4/7" in score or "3/7" in score:
-                suggestions.append("דרוש שכתוב כולל: פתיח מובן, מיקוד, סמכותיות, ודיוק נתונים")
+            elif any(s in score for s in ["4/7", "3/7", "2/7", "1/7"]):
+                suggestions.append("דרוש שכתוב כולל: פתיח, מיקוד, סמכותיות ודיוק נתונים")
         return ", ".join(suggestions)
 
     df["Action Items"] = df.apply(generate_action, axis=1)
     df["GPT Suggestion"] = df.apply(suggest_text_improvement, axis=1)
+    df["Score Explanation"] = df["7-Point Evaluation – After"].apply(evaluate_score_text)
 
     # מסננים לפי שדות נפוצים
     st.sidebar.header("🎯 מסננים")
@@ -60,7 +79,7 @@ if uploaded_file:
     # הצגת תובנות כלליות
     st.subheader("📌 סטטיסטיקות כלליות")
     col1, col2, col3 = st.columns(3)
-    col1.metric('סה\"כ עמודים', len(df))
+    col1.metric('סה"כ עמודים', len(df))
     col2.metric("לא אינדקסביליים", len(df[df["Indexability"] == "Non-Indexable"]))
     col3.metric("חסרי תיאור מוצר", df["Product Description Optimizer"].isna().sum())
 
@@ -72,7 +91,9 @@ if uploaded_file:
         "Title 1 Length",
         "Product Title Optimizer",
         "Product Description Optimizer",
+        "7-Point Evaluation – Before",
         "7-Point Evaluation – After",
+        "Score Explanation",
         "Action Items",
         "GPT Suggestion"
     ]], use_container_width=True)
