@@ -2,26 +2,38 @@ import streamlit as st
 import pandas as pd
 import io
 
-# פונקציה להמרת טקסט Markdown לטבלה DataFrame
+# 🧠 פונקציה להמרת טקסט markdown לטבלת pandas עם טיפול בכפילויות
 def markdown_to_df(text):
     lines = [line.strip() for line in text.split("\n") if "|" in line]
     if len(lines) < 2:
-        return None  # אין מספיק שורות לפירוק
+        return None  # אין מספיק שורות תקינות
 
     headers = [h.strip() for h in lines[0].split("|")]
+    
+    # טיפול בכפילויות בשמות עמודות
+    seen = {}
+    unique_headers = []
+    for h in headers:
+        if h in seen:
+            seen[h] += 1
+            unique_headers.append(f"{h} {seen[h]}")
+        else:
+            seen[h] = 1
+            unique_headers.append(h)
+
     data = []
-    for line in lines[2:]:  # מדלג על שורת הכותרת ושורת המקפים
+    for line in lines[2:]:  # מדלג על שורת הכותרת ושורת ה ---
         parts = [cell.strip() for cell in line.split("|")]
-        if len(parts) == len(headers):
+        if len(parts) == len(unique_headers):
             data.append(parts)
 
-    return pd.DataFrame(data, columns=headers)
+    return pd.DataFrame(data, columns=unique_headers)
 
-# הגדרות עיצוב
+# ⚙️ הגדרות עמוד
 st.set_page_config(layout="wide", page_title="AI Evaluation Viewer")
 st.title("📊 דוח SEO מעילים – ציון וניתוח לפי 7 עקרונות")
 
-# עיצוב RTL וסימון ציונים
+# 🎨 CSS לעיצוב RTL ותגיות צבעוניות
 st.markdown("""
     <style>
     .rtl-text {
@@ -43,19 +55,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# העלאת קובץ
+# 📥 העלאת קובץ Excel
 uploaded_file = st.file_uploader("העלה קובץ Excel מהסריקה", type=["xlsx"])
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    # ניקוי והכנות
+    # ניקוי וטיוב
     df["Score Before"] = df["Score Before"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Score After"] = df["Score After"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Evaluation Table Before"] = df["Evaluation Table Before"].fillna("")
     df["Evaluation Table After"] = df["Evaluation Table After"].fillna("")
 
-    # פירוש ציונים
+    # 🧮 פונקציית דירוג ציונים
     def explain_score(score):
         if pd.isna(score):
             return "<span class='score-badge score-unknown'>❓</span>"
@@ -72,7 +84,7 @@ if uploaded_file:
 
     df["Score Explanation"] = df["Score After"].apply(explain_score)
 
-    # פילטרים
+    # 🔍 סינון
     st.sidebar.header("🌟 סינון")
     indexability_filter = st.sidebar.selectbox("Indexability", options=["הכל"] + df["Indexability"].dropna().unique().tolist())
     weak_score = st.sidebar.checkbox("ציון After נמוך מ-6")
@@ -83,7 +95,7 @@ if uploaded_file:
     if weak_score:
         filtered_df = filtered_df[filtered_df["Score After"] < 6]
 
-    # בחירת עמודות להצגה בטבלה הכללית
+    # ✅ טבלה כללית
     st.subheader("📄 בחר/י אילו עמודות להצגה בטבלת עמודים")
     selected_columns = st.multiselect(
         "בחר/י שדות להצגה:",
@@ -97,7 +109,7 @@ if uploaded_file:
     else:
         st.warning("לא נבחרו עמודות להצגה")
 
-    # פירוט עמודים
+    # 🧩 ניתוח מפורט לפי עמוד
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
     for i, row in filtered_df.iterrows():
         with st.expander(f"🔗 {row['Address']}"):
@@ -105,7 +117,9 @@ if uploaded_file:
                 f"**🔢 ציון לפני:** {row['Score Before']} • **אחרי:** {row['Score After']} • **פירוש:** {row['Score Explanation']}",
                 unsafe_allow_html=True
             )
+
             col1, col2 = st.columns(2)
+
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
                 df_before = markdown_to_df(row["Evaluation Table Before"])
@@ -113,6 +127,7 @@ if uploaded_file:
                     st.table(df_before)
                 else:
                     st.text_area("Evaluation Table Before", row["Evaluation Table Before"], height=220)
+
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
                 df_after = markdown_to_df(row["Evaluation Table After"])
@@ -121,7 +136,7 @@ if uploaded_file:
                 else:
                     st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
 
-            # הצגת שדות נוספים אם יש
+            # שדות נוספים להרחבה
             extra_fields = [
                 ("🧠 המלצות E-E-A-T", "E-E-A-T Checker"),
                 ("🧩 ישויות מזוהות (Entities)", "Entities Extraction"),
