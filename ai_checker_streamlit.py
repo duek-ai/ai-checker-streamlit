@@ -11,11 +11,10 @@ uploaded_file = st.file_uploader("העלה קובץ Excel מתבנית סריק�
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    def extract_score_from_text(text):
+    def extract_score(text):
         if pd.isna(text):
             return None
         text = str(text)
-        # נסה לחלץ קודם ציון כמו "ציון כולל: 6.9"
         match_decimal = re.search(r"ציון כולל[:\s]*([0-9]+\.?[0-9]*)", text)
         if match_decimal:
             try:
@@ -32,14 +31,12 @@ if uploaded_file:
                     return 3
             except:
                 pass
-        # אם אין, נסה לחפש פורמט כמו 4/7
         match_fraction = re.search(r"(\d)/7", text)
         if match_fraction:
             return int(match_fraction.group(1))
         return None
 
-    def evaluate_score_text(text):
-        score = extract_score_from_text(text)
+    def evaluate_score_text(score):
         if score is None:
             return "❓ לא זוהה"
         elif score == 7:
@@ -52,10 +49,15 @@ if uploaded_file:
             return "🟠 גבולי – נדרש שכתוב"
         elif score <= 3:
             return "🔴 חלש – דרוש שכתוב מלא"
-        else:
-            return "❓ לא זוהה"
+        return "❓ לא זוהה"
 
-    # יצירת טור פעולות מומלצות
+    # הפקת ציונים ומידע נוסף
+    df["Score Before"] = df["7-Point Evaluation – Before"].apply(extract_score)
+    df["Score After"] = df["7-Point Evaluation – After"].apply(extract_score)
+    df["Score Explanation"] = df["Score After"].apply(evaluate_score_text)
+    df["Text Before"] = df["7-Point Evaluation – Before"]
+    df["Text After"] = df["7-Point Evaluation – After"]
+
     def generate_action(row):
         actions = []
         if row.get("Indexability") == "Non-Indexable":
@@ -68,12 +70,12 @@ if uploaded_file:
             actions.append("להוסיף שם מוצר שיווקי")
         if pd.isna(row.get("FAQ Generator")):
             actions.append("ליצור שאלות נפוצות (FAQs)")
-        if pd.isna(row.get("7-Point Evaluation – After")):
+        if pd.isna(row.get("Score After")):
             actions.append("אין ציון 7 נקודות - לנתח מחדש")
         return ", ".join(actions)
 
     def suggest_text_improvement(row):
-        score = extract_score_from_text(row.get("7-Point Evaluation – After"))
+        score = row.get("Score After")
         if score is None:
             return ""
         elif score >= 6:
@@ -85,9 +87,8 @@ if uploaded_file:
 
     df["Action Items"] = df.apply(generate_action, axis=1)
     df["GPT Suggestion"] = df.apply(suggest_text_improvement, axis=1)
-    df["Score Explanation"] = df["7-Point Evaluation – After"].apply(evaluate_score_text)
 
-    # מסננים לפי שדות נפוצים
+    # מסננים
     st.sidebar.header("🎯 מסננים")
     indexability_filter = st.sidebar.selectbox("Indexability", options=["הכל"] + df["Indexability"].dropna().unique().tolist())
     title_len_filter = st.sidebar.checkbox("Title ארוך מ-60 תווים")
@@ -102,31 +103,42 @@ if uploaded_file:
     if missing_description:
         filtered_df = filtered_df[filtered_df["Product Description Optimizer"].isna()]
     if weak_score:
-        filtered_df = filtered_df[filtered_df["7-Point Evaluation – After"].apply(lambda x: extract_score_from_text(x) is not None and extract_score_from_text(x) <= 5)]
+        filtered_df = filtered_df[filtered_df["Score After"].apply(lambda x: x is not None and x <= 5)]
 
-    # הצגת תובנות כלליות
+    # סטטיסטיקות
     st.subheader("📌 סטטיסטיקות כלליות")
     col1, col2, col3 = st.columns(3)
     col1.metric('סה"כ עמודים', len(df))
     col2.metric("לא אינדקסביליים", len(df[df["Indexability"] == "Non-Indexable"]))
     col3.metric("חסרי תיאור מוצר", df["Product Description Optimizer"].isna().sum())
 
+    # טבלת תצוגה
     st.subheader("📄 טבלת עמודים")
     st.dataframe(filtered_df[[
         "Address",
         "Indexability",
         "Title 1",
-        "Title 1 Length",
-        "Product Title Optimizer",
-        "Product Description Optimizer",
-        "7-Point Evaluation – Before",
-        "7-Point Evaluation – After",
+        "Score Before",
+        "Score After",
         "Score Explanation",
         "Action Items",
         "GPT Suggestion"
     ]], use_container_width=True)
 
-    # הורדה כקובץ אקסל
+    # תצוגת כרטיסיות עם Expander
+    st.subheader("🗂 תצוגה מפורטת לפי עמוד")
+    for i, row in filtered_df.iterrows():
+        with st.expander(f"{row['Address']}"):
+            st.markdown(f"**📉 ציון לפני:** {row['Score Before']} | **📈 ציון אחרי:** {row['Score After']} | {row['Score Explanation']}")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**טקסט Before:**")
+                st.text_area("Before", row["Text Before"], height=200)
+            with col2:
+                st.markdown("**טקסט After:**")
+                st.text_area("After", row["Text After"], height=200)
+
+    # הורדת אקסל
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         filtered_df.to_excel(writer, index=False, sheet_name='Filtered')
