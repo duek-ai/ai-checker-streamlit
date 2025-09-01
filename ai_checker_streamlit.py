@@ -109,10 +109,12 @@ if uploaded_file:
 
             if row.get("E-E-A-T Checker") and str(row["E-E-A-T Checker"]).strip():
                 with st.expander("🧠 המלצות E-E-A-T"):
+    st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
                     st.markdown(f"<div class='rtl-text'>{row['E-E-A-T Checker']}</div>", unsafe_allow_html=True)
 
             if row.get("Entities Extraction") and str(row["Entities Extraction"]).strip():
                 with st.expander("🧩 ישויות מזוהות (Entities)"):
+    st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
                     st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
                     for line in str(row["Entities Extraction"]).split(","):
                         st.markdown(f"- {line.strip()}")
@@ -120,14 +122,17 @@ if uploaded_file:
 
             if row.get("Intent Alignment") and str(row["Intent Alignment"]).strip():
                 with st.expander("🎯 ניתוח כוונת חיפוש"):
+    st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
                     st.markdown(f"<div class='rtl-text'>{row['Intent Alignment']}</div>", unsafe_allow_html=True)
 
             if row.get("Content Gap vs Competitors") and str(row["Content Gap vs Competitors"]).strip():
                 with st.expander("📉 פערי תוכן מול מתחרים"):
+    st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
                     st.markdown(f"<div class='rtl-text'>{row['Content Gap vs Competitors']}</div>", unsafe_allow_html=True)
 
             if row.get("Schema Suggestions") and str(row["Schema Suggestions"]).strip():
                 with st.expander("🧩 הצעות סכמות (Schema)"):
+    st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
                     st.markdown(f"<div class='rtl-text'>{row['Schema Suggestions']}</div>", unsafe_allow_html=True)
 
             optimization_fields = [
@@ -141,6 +146,7 @@ if uploaded_file:
             has_optimizations = any(row.get(field) and str(row[field]).strip() for field, _ in optimization_fields)
             if has_optimizations:
                 with st.expander("🛠 המלצות יישום ישיר (Rewriters & Optimizers)"):
+    st.markdown("<div class='rtl-text'>", unsafe_allow_html=True)
                     for field, label in optimization_fields:
                         if row.get(field) and str(row[field]).strip():
                             st.markdown(f"<div class='rtl-text'><b>{label}</b></div>", unsafe_allow_html=True)
