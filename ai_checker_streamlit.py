@@ -19,10 +19,10 @@ st.markdown("""
         color: white;
         display: inline-block;
     }
-    .score-good { background-color: #4CAF50; }     /* ירוק */
-    .score-mid { background-color: #FFC107; }     /* כתום */
-    .score-bad { background-color: #F44336; }     /* אדום */
-    .score-unknown { background-color: #9E9E9E; } /* אפור */
+    .score-good { background-color: #4CAF50; }
+    .score-mid { background-color: #FFC107; }
+    .score-bad { background-color: #F44336; }
+    .score-unknown { background-color: #9E9E9E; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -75,26 +75,22 @@ if uploaded_file:
     else:
         st.warning("לא נבחרו עמודות להצגה")
 
-    st.subheader("🗂 ניתוח מפורט לפי עמוד")
+    def parse_evaluation_table(table_text):
+        rows = []
+        for line in str(table_text).split("\n"):
+            parts = [part.strip() for part in line.split("|")]
+            if len(parts) == 3:
+                rows.append({"עיקרון": parts[0], "ציון (1–10)": parts[1], "הערה קצרה": parts[2]})
+        return pd.DataFrame(rows)
+
+    st.subheader("📑 ניתוח מפורט לפי עמוד")
     for i, row in filtered_df.iterrows():
         with st.expander(f"{row['Address']}"):
-            st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:**", unsafe_allow_html=True)
-            st.markdown(row['Score Explanation'], unsafe_allow_html=True)
-
+            st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}", unsafe_allow_html=True)
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("**טבלת ניתוח לפני:**")
-                st.text_area("Evaluation Table Before", row["Evaluation Table Before"], height=220)
+                st.markdown("**טבלת ניתוח לפני:**", unsafe_allow_html=True)
+                st.dataframe(parse_evaluation_table(row["Evaluation Table Before"]), use_container_width=True)
             with col2:
-                st.markdown("**טבלת ניתוח אחרי:**")
-                st.text_area("Evaluation Table After", row["Evaluation Table After"], height=220)
-
-            for field in [
-                "E-E-A-T Checker", "Entities Extraction", "Intent Alignment",
-                "Content Gap vs Competitors", "Schema Suggestions",
-                "H1 Rewriter", "Featured Snippet Optimizer", "CTA Optimizer",
-                "Product Title Optimizer", "Product Description Optimizer"
-            ]:
-                if field in row and pd.notna(row[field]):
-                    with st.expander(f"{field} – תוכן השדה"):
-                        st.markdown(f"<div class='rtl-text'>{row[field]}</div>", unsafe_allow_html=True)
+                st.markdown("**טבלת ניתוח אחרי:**", unsafe_allow_html=True)
+                st.dataframe(parse_evaluation_table(row["Evaluation Table After"]), use_container_width=True)
