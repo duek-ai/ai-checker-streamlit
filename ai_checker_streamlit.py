@@ -12,6 +12,16 @@ st.markdown("""
         text-align: right;
         font-family: Arial;
     }
+    .score-note {
+        font-size: 14px;
+        color: gray;
+        margin-top: -10px;
+        margin-bottom: 10px;
+    }
+    .score-highlight {
+        color: crimson;
+        font-weight: bold;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -58,47 +68,13 @@ if uploaded_file:
         default=["Address", "Title 1", "Score Before", "Score After", "Score Explanation"]
     )
 
+    st.markdown("""
+    <div class='score-note rtl-text'>
+        🧮 שימו לב: <span class='score-highlight'>Score Before</span> ו-<span class='score-highlight'>Score After</span> מחושבים באופן אוטומטי מתוך טבלת הניתוח Evaluation Table.
+    </div>
+    """, unsafe_allow_html=True)
+
     if selected_columns:
-        st.markdown("**📌 שימו לב:** השדות *Score Before* ו־*Score After* מחושבים מתוך הטבלאות Evaluation Table באופן אוטומטי.", unsafe_allow_html=True)
         st.dataframe(filtered_df[selected_columns], use_container_width=True)
-
-        for i, row in filtered_df.iterrows():
-            with st.expander(f"🔗 {row['Address']}"):
-                st.markdown(f"**ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown("<div class='rtl-text'>טבלת ניתוח לפני:</div>", unsafe_allow_html=True)
-                    st.dataframe(pd.read_fwf(io.StringIO(row['Evaluation Table Before'])), use_container_width=True)
-                with col2:
-                    st.markdown("<div class='rtl-text'>טבלת ניתוח אחרי:</div>", unsafe_allow_html=True)
-                    st.dataframe(pd.read_fwf(io.StringIO(row['Evaluation Table After'])), use_container_width=True)
-
-                with st.expander("🧠 המלצות E-E-A-T"):
-                    st.markdown(f"<div class='rtl-text'>{row['E-E-A-T Checker']}</div>", unsafe_allow_html=True)
-
-                with st.expander("🧩 ישויות מזוהות (Entities)"):
-                    st.markdown(f"<div class='rtl-text'>{row['Entities Extraction']}</div>", unsafe_allow_html=True)
-
-                with st.expander("🎯 ניתוח כוונת חיפוש"):
-                    st.markdown(f"<div class='rtl-text'>{row['Intent Alignment']}</div>", unsafe_allow_html=True)
-
-                with st.expander("📉 פערי תוכן מול מתחרים"):
-                    st.markdown(f"<div class='rtl-text'>{row['Content Gap vs Competitors']}</div>", unsafe_allow_html=True)
-
-                with st.expander("🧩 הצעות סכמות (Schema)"):
-                    st.markdown(f"<div class='rtl-text'>{row['Schema Suggestions']}</div>", unsafe_allow_html=True)
-
-                with st.expander("🛠 המלצות יישום ישיר (Rewriters & Optimizers)"):
-                    st.markdown("<div class='rtl-text'>🔷 <b>כותרת H1 מומלצת</b>:</div>", unsafe_allow_html=True)
-                    st.markdown(row['H1 Rewriter'])
-                    st.markdown("<div class='rtl-text'>⭐ <b>Featured Snippet מוצע</b>:</div>", unsafe_allow_html=True)
-                    st.markdown(row['Featured Snippet Optimizer'])
-                    st.markdown("<div class='rtl-text'>🎯 <b>קריאה לפעולה (CTA) מומלצת</b>:</div>", unsafe_allow_html=True)
-                    st.markdown(row['CTA Optimizer'])
-                    st.markdown("<div class='rtl-text'>📝 <b>כותרת מוצר מומלצת</b>:</div>", unsafe_allow_html=True)
-                    st.markdown(row['Product Title Optimizer'])
-                    st.markdown("<div class='rtl-text'>🧾 <b>תיאור מוצר מומלץ</b>:</div>", unsafe_allow_html=True)
-                    st.markdown(row['Product Description Optimizer'])
     else:
         st.warning("לא נבחרו עמודות להצגה")
