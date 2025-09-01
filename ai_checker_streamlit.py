@@ -60,7 +60,7 @@ if uploaded_file:
     # הצגת תובנות כלליות
     st.subheader("📌 סטטיסטיקות כלליות")
     col1, col2, col3 = st.columns(3)
-    col1.metric("סה"כ עמודים", len(df))
+    col1.metric('סה\"כ עמודים', len(df))
     col2.metric("לא אינדקסביליים", len(df[df["Indexability"] == "Non-Indexable"]))
     col3.metric("חסרי תיאור מוצר", df["Product Description Optimizer"].isna().sum())
 
