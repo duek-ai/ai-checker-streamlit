@@ -5,7 +5,6 @@ import io
 st.set_page_config(layout="wide", page_title="AI Evaluation Viewer")
 st.title("📊 דוח SEO מעילים – ציון וניתוח לפי 7 עקרונות")
 
-# הגדרת יישור RTL
 st.markdown("""
     <style>
     .rtl-text {
@@ -16,19 +15,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# העלאת קובץ
 uploaded_file = st.file_uploader("העלה קובץ Excel מהסריקה", type=["xlsx"])
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    # עיבוד ציונים
     df["Score Before"] = df["Score Before"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Score After"] = df["Score After"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Evaluation Table Before"] = df["Evaluation Table Before"].fillna("")
     df["Evaluation Table After"] = df["Evaluation Table After"].fillna("")
 
-    # פונקציית הסבר ציון
     def explain_score(score):
         if pd.isna(score):
             return "❓"
@@ -56,8 +52,8 @@ if uploaded_file:
     if weak_score:
         filtered_df = filtered_df[filtered_df["Score After"] < 6]
 
-    # טבלת תצוגה דינמית
-    st.subheader("📄 בחר/י אילו עמודות להציג בטבלה")
+    # בחירת עמודות דינמית
+    st.subheader("📄 בחר/י אילו עמודות להציג בטבלת עמודים")
     selected_columns = st.multiselect(
         "בחר/י שדות להצגה:",
         options=df.columns.tolist(),
@@ -69,26 +65,34 @@ if uploaded_file:
     else:
         st.warning("לא נבחרו עמודות להצגה")
 
-    # כרטיסיות לפי עמוד
+    # כרטיסיות נפרדות לפי עמוד
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
-    for _, row in filtered_df.iterrows():
+    for i, row in filtered_df.iterrows():
         with st.expander(f"{row['Address']}"):
             st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**טבלת ניתוח לפני:**")
-                if row["Evaluation Table Before"].strip().startswith("\\begin"):
+                if row["Evaluation Table Before"].strip().startswith("\begin"):
                     st.latex(row["Evaluation Table Before"])
                 else:
-                    st.markdown(f"<div class='rtl-text'>{row['Evaluation Table Before']}</div>", unsafe_allow_html=True)
+                    st.markdown("""
+                        <div class="rtl-text">
+                    """ + row["Evaluation Table Before"] + """
+                        </div>
+                    """, unsafe_allow_html=True)
             with col2:
                 st.markdown("**טבלת ניתוח אחרי:**")
-                if row["Evaluation Table After"].strip().startswith("\\begin"):
+                if row["Evaluation Table After"].strip().startswith("\begin"):
                     st.latex(row["Evaluation Table After"])
                 else:
-                    st.markdown(f"<div class='rtl-text'>{row['Evaluation Table After']}</div>", unsafe_allow_html=True)
+                    st.markdown("""
+                        <div class="rtl-text">
+                    """ + row["Evaluation Table After"] + """
+                        </div>
+                    """, unsafe_allow_html=True)
 
-    # הורדת הקובץ
+    # הורדה
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         filtered_df.to_excel(writer, index=False, sheet_name='Evaluation')
