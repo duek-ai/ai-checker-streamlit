@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import re
 
 st.set_page_config(layout="wide", page_title="AI Screaming Frog Viewer")
 st.title("📊 דוח SEO מעילים – ניתוח Screaming Frog עם תובנות")
@@ -10,22 +11,29 @@ uploaded_file = st.file_uploader("העלה קובץ Excel מתבנית סריק�
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
-    def evaluate_score_text(score):
-        if pd.isna(score):
-            return "❓ חסר ציון"
-        try:
-            numeric = int(str(score).split("/")[0])
-            if numeric == 7:
-                return "✅ מושלם – אין צורך בשיפור"
-            elif numeric == 6:
-                return "🟢 טוב מאוד – תיקון קל"
-            elif numeric == 5:
-                return "🟡 בינוני – כדאי לשפר"
-            elif numeric == 4:
-                return "🟠 גבולי – נדרש שכתוב"
-            elif numeric <= 3:
-                return "🔴 חלש – דרוש שכתוב מלא"
-        except:
+    def extract_score_from_text(text):
+        if pd.isna(text):
+            return None
+        match = re.search(r"(\d)/7", str(text))
+        if match:
+            return int(match.group(1))
+        return None
+
+    def evaluate_score_text(text):
+        score = extract_score_from_text(text)
+        if score is None:
+            return "❓ לא זוהה"
+        elif score == 7:
+            return "✅ מושלם – אין צורך בשיפור"
+        elif score == 6:
+            return "🟢 טוב מאוד – תיקון קל"
+        elif score == 5:
+            return "🟡 בינוני – כדאי לשפר"
+        elif score == 4:
+            return "🟠 גבולי – נדרש שכתוב"
+        elif score <= 3:
+            return "🔴 חלש – דרוש שכתוב מלא"
+        else:
             return "❓ לא זוהה"
 
     # יצירת טור פעולות מומלצות
@@ -46,14 +54,15 @@ if uploaded_file:
         return ", ".join(actions)
 
     def suggest_text_improvement(row):
-        suggestions = []
-        score = row.get("7-Point Evaluation – After")
-        if score and isinstance(score, str):
-            if any(s in score for s in ["6/7", "5/7"]):
-                suggestions.append("שפר ניסוח לפי 7 העקרונות: כוונת חיפוש, עוגנים, הקשר נרטיבי")
-            elif any(s in score for s in ["4/7", "3/7", "2/7", "1/7"]):
-                suggestions.append("דרוש שכתוב כולל: פתיח, מיקוד, סמכותיות ודיוק נתונים")
-        return ", ".join(suggestions)
+        score = extract_score_from_text(row.get("7-Point Evaluation – After"))
+        if score is None:
+            return ""
+        elif score >= 6:
+            return "שפר ניסוח לפי עקרונות: מיקוד ועוגנים"
+        elif score >= 4:
+            return "שכתב פתיח, עוגנים, דיוק והקשר"
+        else:
+            return "דרוש שכתוב מלא לפי 7 העקרונות"
 
     df["Action Items"] = df.apply(generate_action, axis=1)
     df["GPT Suggestion"] = df.apply(suggest_text_improvement, axis=1)
@@ -74,7 +83,7 @@ if uploaded_file:
     if missing_description:
         filtered_df = filtered_df[filtered_df["Product Description Optimizer"].isna()]
     if weak_score:
-        filtered_df = filtered_df[filtered_df["7-Point Evaluation – After"].astype(str).str.contains("^[0-5]/7", na=False)]
+        filtered_df = filtered_df[filtered_df["7-Point Evaluation – After"].apply(lambda x: extract_score_from_text(x) is not None and extract_score_from_text(x) <= 5)]
 
     # הצגת תובנות כלליות
     st.subheader("📌 סטטיסטיקות כלליות")
