@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import io
@@ -15,9 +14,28 @@ if uploaded_file:
     def extract_score_from_text(text):
         if pd.isna(text):
             return None
-        match = re.search(r"(\d)/7", str(text))
-        if match:
-            return int(match.group(1))
+        text = str(text)
+        # נסה לחלץ קודם ציון כמו "ציון כולל: 6.9"
+        match_decimal = re.search(r"ציון כולל[:\s]*([0-9]+\.?[0-9]*)", text)
+        if match_decimal:
+            try:
+                score = float(match_decimal.group(1))
+                if score >= 6.5:
+                    return 7
+                elif score >= 5.5:
+                    return 6
+                elif score >= 4.5:
+                    return 5
+                elif score >= 3.5:
+                    return 4
+                else:
+                    return 3
+            except:
+                pass
+        # אם אין, נסה לחפש פורמט כמו 4/7
+        match_fraction = re.search(r"(\d)/7", text)
+        if match_fraction:
+            return int(match_fraction.group(1))
         return None
 
     def evaluate_score_text(text):
