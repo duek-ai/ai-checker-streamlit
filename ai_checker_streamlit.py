@@ -65,6 +65,30 @@ if uploaded_file:
     else:
         st.warning("לא נבחרו עמודות להצגה")
 
+    def display_table_or_fallback(text):
+        cleaned_text = text.strip()
+        if "\\begin" in cleaned_text or "\begin" in cleaned_text:
+            st.latex(cleaned_text)
+        elif "|" in cleaned_text and cleaned_text.count("|") >= 2:
+            try:
+                df = pd.read_csv(io.StringIO(cleaned_text), sep='|', engine='python', skiprows=[1])
+                df = df.dropna(axis=1, how='all')
+                df = df.dropna(how='all')
+                df.columns = [col.strip() for col in df.columns]
+                st.dataframe(
+                    df.style.set_table_styles([
+                        {'selector': 'th', 'props': [('text-align', 'right')]},
+                        {'selector': 'td', 'props': [('text-align', 'right')]}
+                    ]),
+                    use_container_width=True
+                )
+            except Exception:
+                st.warning("⚠️ לא ניתן להציג טבלה, הפורמט אינו תקני")
+                st.markdown(f"<div class='rtl-text'>{cleaned_text}</div>", unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ אין תוכן להצגה כטבלה")
+            st.markdown(f"<div class='rtl-text'>{cleaned_text}</div>", unsafe_allow_html=True)
+
     # כרטיסיות נפרדות לפי עמוד
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
     for _, row in filtered_df.iterrows():
@@ -72,28 +96,16 @@ if uploaded_file:
             st.markdown(f"**🔢 ציון לפני:** {row['Score Before']} | **אחרי:** {row['Score After']} | **פירוש:** {row['Score Explanation']}")
             col1, col2 = st.columns(2)
 
-            def display_table_or_fallback(text, position):
-                cleaned_text = text.strip()
-                if cleaned_text.startswith("\begin") or cleaned_text.startswith("egin"):
-                    st.latex(cleaned_text)
-                elif "|" in cleaned_text and cleaned_text.count("|") >= 2:
-                    try:
-                        df = pd.read_csv(io.StringIO(cleaned_text), sep='|', engine='python', skiprows=[1])
-                        df = df.dropna(axis=1, how='all')
-                        df = df.dropna(how='all')
-                        df.columns = [col.strip() for col in df.columns]
-                        st.dataframe(
-                            df.style.set_table_styles([
-                                {'selector': 'th', 'props': [('text-align', 'right')]},
-                                {'selector': 'td', 'props': [('text-align', 'right')]}
-                            ]),
-                            use_container_width=True
-                        )
-                    except Exception:
-                        st.warning("⚠️ לא ניתן להציג טבלה, הפורמט אינו תקני")
-                        st.markdown(f"<div class='rtl-text'>{cleaned_text}</div>", unsafe_allow_html=True)
-                else:
-                    st.warning("⚠️ אין תוכן להצגה כטבלה")
-                    st.markdown(f"<div class='rtl-text'>{cleaned_text}</div>", unsafe_allow_html=True)
+            with col1:
+                st.markdown("**טבלת ניתוח לפני:**")
+                display_table_or_fallback(row["Evaluation Table Before"])
 
-    # הורדה("📥 הורד את הקובץ כ-Excel", data=output.getvalue(), file_name="evaluation_report.xlsx")
+            with col2:
+                st.markdown("**טבלת ניתוח אחרי:**")
+                display_table_or_fallback(row["Evaluation Table After"])
+
+    # הורדה
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        filtered_df.to_excel(writer, index=False, sheet_name='Evaluation')
+    st.download_button("📥 הורד את הקובץ כ-Excel", data=output.getvalue(), file_name="evaluation_report.xlsx")
