@@ -42,24 +42,18 @@ if uploaded_file:
     if weak_score:
         filtered_df = filtered_df[filtered_df["Score After"] < 6]
 
-    # טבלה מורחבת
-    st.subheader("📄 טבלת עמודים עם פרטים")
-    st.dataframe(filtered_df[[
-        "Address",
-        "Title 1",
-        "H1-1",
-        "H2-1",
-        "Meta Description 1",
-        "Canonical Link Element 1",
-        "Redirect URL",
-        "Status Code",
-        "Indexability",
-        "Word Count",
-        "Text Ratio",
-        "Score Before",
-        "Score After",
-        "Score Explanation"
-    ]], use_container_width=True)
+    # בחירת עמודות דינמית
+    st.subheader("📄 בחר/י אילו עמודות להציג בטבלת עמודים")
+    selected_columns = st.multiselect(
+        "בחר/י שדות להצגה:",
+        options=df.columns.tolist(),
+        default=["Address", "Title 1", "Score Before", "Score After", "Score Explanation"]
+    )
+
+    if selected_columns:
+        st.dataframe(filtered_df[selected_columns], use_container_width=True)
+    else:
+        st.warning("לא נבחרו עמודות להצגה")
 
     # כרטיסיות נפרדות לפי עמוד
     st.subheader("🗂 ניתוח מפורט לפי עמוד")
