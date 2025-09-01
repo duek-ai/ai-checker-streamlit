@@ -12,10 +12,6 @@ st.markdown("""
         text-align: right;
         font-family: Arial;
     }
-    .streamlit-expanderHeader {
-        direction: rtl;
-        text-align: right;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -24,26 +20,10 @@ uploaded_file = st.file_uploader("העלה קובץ Excel מהסריקה", type=
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
+    df["Score Before"] = df["Score Before"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
+    df["Score After"] = df["Score After"].astype(str).str.extract(r"([0-9]+\.?[0-9]*)").astype(float)
     df["Evaluation Table Before"] = df["Evaluation Table Before"].fillna("")
     df["Evaluation Table After"] = df["Evaluation Table After"].fillna("")
-
-    def recalculate_score(table_text):
-        try:
-            df_score = pd.read_csv(io.StringIO(table_text), sep='|', engine='python', skiprows=[1])
-            df_score = df_score.dropna(axis=1, how='all').dropna(how='all')
-            df_score.columns = [col.strip() for col in df_score.columns]
-            score_col = df_score.columns[1] if df_score.shape[1] >= 2 else None
-            if score_col:
-                scores = pd.to_numeric(df_score[score_col], errors='coerce')
-                scores = scores.dropna()
-                if not scores.empty:
-                    return round(scores.mean(), 1)
-        except Exception:
-            return None
-        return None
-
-    df["Score Before"] = df["Evaluation Table Before"].apply(recalculate_score)
-    df["Score After"] = df["Evaluation Table After"].apply(recalculate_score)
 
     def explain_score(score):
         if pd.isna(score):
@@ -61,8 +41,7 @@ if uploaded_file:
 
     df["Score Explanation"] = df["Score After"].apply(explain_score)
 
-    # פילטרים
-    st.sidebar.header("🎯 סינון")
+    st.sidebar.header("🌟 סינון")
     indexability_filter = st.sidebar.selectbox("Indexability", options=["הכל"] + df["Indexability"].dropna().unique().tolist())
     weak_score = st.sidebar.checkbox("ציון After נמוך מ-6")
 
@@ -72,13 +51,15 @@ if uploaded_file:
     if weak_score:
         filtered_df = filtered_df[filtered_df["Score After"] < 6]
 
-    # טבלת עמודים
-    st.subheader("📄 טבלת עמודים עם ציונים (מבוסס חישוב ממוצע מתוך הטבלאות)")
-    st.dataframe(filtered_df[["Address", "Title 1", "Score Before", "Score After", "Score Explanation"]], use_container_width=True)
+    st.subheader("📄 בחר/י אילו עמודות להצגה בטבלת עמודים")
+    selected_columns = st.multiselect(
+        "בחר/י שדות להצגה:",
+        options=df.columns.tolist(),
+        default=["Address", "Title 1", "Score Before", "Score After", "Score Explanation"]
+    )
 
-    # הורדה
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        filtered_df.to_excel(writer, index=False, sheet_name='Evaluation')
-
-    st.download_button("📥 הורד את הקובץ כ-Excel", data=output.getvalue(), file_name="evaluation_report.xlsx")
+    if selected_columns:
+        st.markdown("**📌 שימו לב:** השדות *Score Before* ו־*Score After* מחושבים מתוך הטבלאות Evaluation Table באופן אוטומטי.", unsafe_allow_html=True)
+        st.dataframe(filtered_df[selected_columns], use_container_width=True)
+    else:
+        st.warning("לא נבחרו עמודות להצגה")
